@@ -8,5 +8,4 @@ const router = express.Router();
 router.get('/:id', fetchUsersById)
     .patch('/:id', updateUsersById)
 
-
 exports.router = router;
