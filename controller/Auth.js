@@ -1,36 +1,39 @@
 const { User } = require("../model/userSchema");
+const crypto = require("crypto");
 
 // Creating the Users //
-exports.createUser = async (req, res)=>{
-    
-try {
-    const user = new User(req.body)
-    const savedUser = await user.save();
-    res.status(201).json(savedUser);
+exports.createUser = async (req, res) => {
 
-} catch (error) {
-    res.status(400).json(error);
-}
-   
-}
-
-exports.loginUser = async (req, res)=>{
     try {
-        const logUser = await User.findOne({email:req.body.email}).exec();
 
-        if(logUser){
-            if(logUser.password===req.body.password){
-                res.status(200).json({logUser});
-                console.log({msg:"Login Successfull"});
-            }
-            else{
-            res.status(400).json({message:"wrong User-Password"})
-            }
-        }
-        else{
-            res.status(400).json({message:"Not User-Email exists"})
-        }
+        var salt = crypto.randomBytes(16);
+        crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256',async function (err, hashedPassword) {
+
+
+            const user = new User({ ...req.body, password: hashedPassword, salt })
+            const savedUser = await user.save();
+            res.status(201).json(savedUser);
+
+        })
     } catch (error) {
-        res.status(401).json(error);
+        res.status(400).json(error);
     }
+
+}
+
+exports.loginUser = async (req, res) => {
+
+    res.json(req.user);
+}
+
+
+exports.checkUser = async (req, res) => {
+    console.log(req.user);
+    const responseObj = {
+        user: req.user,
+        msg: 'user is checked'
+    };
+
+    res.json(responseObj);
+    console.log('chal rha hau');
 }
