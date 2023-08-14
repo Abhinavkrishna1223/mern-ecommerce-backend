@@ -8,7 +8,11 @@ const port = 8080 || process.env.PORT;
 const passport = require("passport");
 const session = require('express-session');
 const LocalStrategy = require("passport-local").Strategy
-  ;
+const crypto = require("crypto")
+const jwt = require('jsonwebtoken');
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+
 
 
 // Routes //
@@ -19,10 +23,13 @@ const authRouters = require("./routes/AuthRouter");
 const userRouters = require("./routes/UserRoute");
 const cartRouters = require("./routes/CartRouter");
 const { User } = require("./model/userSchema");
+const { isAuth, sanitizeUser, SECRET_KEY } = require("./services/common");
+
+
+
 
 
 //middlewares
-
 server.use(session({
   secret: 'keyboard cat',
   resave: false, // don't save session if unmodified
@@ -34,13 +41,21 @@ server.use(passport.authenticate('session'));
 server.use(cors({
   exposedHeaders: ['X-Total-Count'] //It is used to expose the headers in cross origin to get total count of Products for pagination //
 }));
+server.use(passport.session())
 server.use(express.json()); // --> To parse req.body //
-server.use('/products', isAuth,productRouters.router); // We also use JWt token 
+server.use('/products',productRouters.router); // We also use JWt token 
 server.use('/categories', categoryRouters.router);
 server.use('/brands', brandRouters.router);
 server.use('/auth', authRouters.router);
 server.use('/users', userRouters.router);
 server.use('/cart', cartRouters.router);
+
+
+
+
+var opts = {}
+opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+opts.secretOrKey = SECRET_KEY;
 
 passport.use(
   'local',
@@ -56,18 +71,46 @@ passport.use(
       if (!user) {  
         return done(null, false, { message: 'invalid credentials(Email)' }); // for safety
       }
-      else if(user.password===password){
-       return done(null,user),console.log("password checked"); // this data sends to serialize //
-      }
-      else {
-        return done(null, false,{ message: 'invalid credentials' })
-      }
+
+      crypto.pbkdf2(password, user.salt, 310000, 32, 'sha256',async function (err, hashedPassword) {
+
+        if(!crypto.timingSafeEqual( user.password,hashedPassword)){
+
+          return done(null, false,{ message: 'invalid credentials' })
+         
+         }
+
+         const token = jwt.sign(sanitizeUser(user), SECRET_KEY)
+
+         return done(null,token); // this data sends to serialize //
+    })
+
     } catch (err) {
       done(err);
     }
   })
 );
 
+// JWt Strategy //
+
+passport.use('jwt', new JwtStrategy(opts, async function(jwt_payload, done) {
+
+  console.log({jwt_payload, msg:"data aa gya"});
+
+  try {
+    const user = await User.findById(jwt_payload.id)
+      if (user) {
+          return done(null, sanitizeUser(user));
+      } else {
+          return done(null, false);
+          // or you could create a new account
+      }
+  } catch (error) {
+    return done(err, false);
+  }
+
+  
+}))
 
 // This creates a session variable req.user on being called //
 
@@ -101,14 +144,7 @@ server.get("/", (req, res) => {
   res.json({ status: "success" })
 })
 
-function isAuth(req, res, cb){
-  if(req.user){             
-    cb();
-  }
-  else{
-    res.send(401)
-  }
-}
+
 
 
 server.listen(port, () => {

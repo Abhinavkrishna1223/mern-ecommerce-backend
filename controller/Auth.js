@@ -1,5 +1,7 @@
 const { User } = require("../model/userSchema");
 const crypto = require("crypto");
+const { sanitizeUser, SECRET_KEY } = require("../services/common");
+const jwt = require("jsonwebtoken")
 
 // Creating the Users //
 exports.createUser = async (req, res) => {
@@ -12,7 +14,16 @@ exports.createUser = async (req, res) => {
 
             const user = new User({ ...req.body, password: hashedPassword, salt })
             const savedUser = await user.save();
-            res.status(201).json(savedUser);
+    
+            req.login(sanitizeUser(savedUser),(err)=>{ // req.login also calls serializer and adds to the session //
+                if(err){
+                    res.status(400).json(err)
+                }
+                else{
+                    const token = jwt.sign(sanitizeUser(savedUser), SECRET_KEY)
+                    res.status(201).json(token);
+                }
+            })
 
         })
     } catch (error) {
@@ -23,15 +34,17 @@ exports.createUser = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
 
+  
     res.json(req.user);
+   
 }
 
 
 exports.checkUser = async (req, res) => {
-    console.log(req.user);
+    console.log(req.user, 'checkUser User');
     const responseObj = {
         user: req.user,
-        msg: 'user is checked'
+        status: 'success'
     };
 
     res.json(responseObj);
