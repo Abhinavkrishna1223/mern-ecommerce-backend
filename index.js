@@ -11,7 +11,8 @@ const LocalStrategy = require("passport-local").Strategy
 const crypto = require("crypto")
 const jwt = require('jsonwebtoken');
 const JwtStrategy = require('passport-jwt').Strategy;
-const ExtractJwt = require('passport-jwt').ExtractJwt;
+const cookieParser = require("cookie-parser");
+// const ExtractJwt = require('passport-jwt').ExtractJwt;
 
 
 
@@ -23,13 +24,16 @@ const authRouters = require("./routes/AuthRouter");
 const userRouters = require("./routes/UserRoute");
 const cartRouters = require("./routes/CartRouter");
 const { User } = require("./model/userSchema");
-const { isAuth, sanitizeUser, SECRET_KEY } = require("./services/common");
-
-
+const { isAuth, sanitizeUser, SECRET_KEY, cookieExtractor } = require("./services/common");
 
 
 
 //middlewares
+
+server.use(express.static('build'));
+
+server.use(cookieParser());
+
 server.use(session({
   secret: 'keyboard cat',
   resave: false, // don't save session if unmodified
@@ -43,18 +47,19 @@ server.use(cors({
 }));
 server.use(passport.session())
 server.use(express.json()); // --> To parse req.body //
-server.use('/products',productRouters.router); // We also use JWt token 
-server.use('/categories', categoryRouters.router);
-server.use('/brands', brandRouters.router);
+server.use('/products',isAuth(), productRouters.router); // We also use JWt token 
+server.use('/categories', isAuth(), categoryRouters.router);
+server.use('/brands', isAuth(), brandRouters.router);
 server.use('/auth', authRouters.router);
-server.use('/users', userRouters.router);
-server.use('/cart', cartRouters.router);
+server.use('/users', isAuth(), userRouters.router);
+server.use('/cart', isAuth(), cartRouters.router);
 
 
 
+// jwt options //
 
 var opts = {}
-opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+opts.jwtFromRequest = cookieExtractor;
 opts.secretOrKey = SECRET_KEY;
 
 passport.use(
@@ -82,7 +87,7 @@ passport.use(
 
          const token = jwt.sign(sanitizeUser(user), SECRET_KEY)
 
-         return done(null,token); // this data sends to serialize //
+         return done(null,{token}); // this data sends to serialize //
     })
 
     } catch (err) {

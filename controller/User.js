@@ -2,7 +2,7 @@ const { User } = require('../model/userSchema')
 
 
 exports.fetchUsersById = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.user;
 
     try {
         const userById = await User.findById(id).exec();
@@ -16,7 +16,7 @@ exports.fetchUsersById = async (req, res) => {
 
 // Update the User //
 exports.updateUsersById = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.user;
     try {
         const userUpdated = await User.findByIdAndUpdate(id, req.body, { new: true });
         res.status(200).json(userUpdated);
