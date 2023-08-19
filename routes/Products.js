@@ -6,7 +6,7 @@ const router = express.Router();
 
 // '/products' is already added in base path //
 router.post('/', createProduct)
-    .get('/', isAuth() ,fetchAllProducts)
+    .get('/',fetchAllProducts)
     .get('/:id', fetchProductsById)
     .patch('/:id', updateProductsById)
 

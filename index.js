@@ -12,7 +12,6 @@ const crypto = require("crypto")
 const jwt = require('jsonwebtoken');
 const JwtStrategy = require('passport-jwt').Strategy;
 const cookieParser = require("cookie-parser");
-// const ExtractJwt = require('passport-jwt').ExtractJwt;
 
 
 
@@ -23,14 +22,13 @@ const brandRouters = require("./routes/BrandsRoute");
 const authRouters = require("./routes/AuthRouter");
 const userRouters = require("./routes/UserRoute");
 const cartRouters = require("./routes/CartRouter");
+const orderRouters = require("./routes/OrderRoute");
 const { User } = require("./model/userSchema");
 const { isAuth, sanitizeUser, SECRET_KEY, cookieExtractor } = require("./services/common");
 
 
 
 //middlewares
-
-server.use(express.static('build'));
 
 server.use(cookieParser());
 
@@ -53,6 +51,7 @@ server.use('/brands', isAuth(), brandRouters.router);
 server.use('/auth', authRouters.router);
 server.use('/users', isAuth(), userRouters.router);
 server.use('/cart', isAuth(), cartRouters.router);
+server.use('/order', isAuth(), orderRouters.router);
 
 
 
@@ -87,7 +86,7 @@ passport.use(
 
          const token = jwt.sign(sanitizeUser(user), SECRET_KEY)
 
-         return done(null,{token}); // this data sends to serialize //
+         return done(null, { id:user.id, role:user.role }); // this data sends to serialize //
     })
 
     } catch (err) {
@@ -99,8 +98,6 @@ passport.use(
 // JWt Strategy //
 
 passport.use('jwt', new JwtStrategy(opts, async function(jwt_payload, done) {
-
-  console.log({jwt_payload, msg:"data aa gya"});
 
   try {
     const user = await User.findById(jwt_payload.id)
@@ -121,14 +118,12 @@ passport.use('jwt', new JwtStrategy(opts, async function(jwt_payload, done) {
 
 
 passport.serializeUser(function (user, cb) {
-  console.log('serialize', user);
   process.nextTick(function () {
     return cb(null, { id:user.id, role:user.role });
   });
 });
 
 passport.deserializeUser(function (user, cb) {
-  console.log('de-serialize', user);
   process.nextTick(function () {
     return cb(null, user);
   });

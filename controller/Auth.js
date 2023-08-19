@@ -21,7 +21,7 @@ exports.createUser = async (req, res) => {
                 else {
                     const token = jwt.sign(sanitizeUser(savedUser), SECRET_KEY)
 
-                    res.cookie('jwt', token, { expires: new Date(Date.now() + 3600000), httpOnly: true }).status(201).json(token);
+                    res.cookie('jwt', token, { expires: new Date(Date.now() + 3600000), httpOnly: true }).status(201).json( { id:savedUser.id, role:savedUser.role });
                 }
             })
 
@@ -37,10 +37,10 @@ exports.loginUser = async (req, res) => {
 }
 
 
-exports.checkUser = async (req, res) => {
+exports.checkAuth = async (req, res) => {
     // Now you can access the authenticated user using req.user
     if (req.user) {
-        res.status(201).json({ status: 'success', user: req.user });
+        res.status(201).json(req.user);
     } else {
         res.status(400).json({ status: 'error', message: 'User not authenticated' });
     }
