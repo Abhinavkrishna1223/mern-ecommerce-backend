@@ -7,7 +7,7 @@ const userSchema = new Schema({
         required: true,
     },
     password: {
-        type:String,
+        type:Buffer,
         required: true
     },
     role:{
@@ -23,7 +23,8 @@ const userSchema = new Schema({
     },
     orders:{
         type:[Schema.Types.Mixed]
-    }
+    },
+    salt:Buffer
    
 });
 

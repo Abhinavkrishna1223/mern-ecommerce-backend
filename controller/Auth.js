@@ -1,36 +1,47 @@
 const { User } = require("../model/userSchema");
+const crypto = require("crypto");
+const { sanitizeUser, SECRET_KEY } = require("../services/common");
+const jwt = require("jsonwebtoken");
 
 // Creating the Users //
-exports.createUser = async (req, res)=>{
-    
-try {
-    const user = new User(req.body)
-    const savedUser = await user.save();
-    res.status(201).json(savedUser);
+exports.createUser = async (req, res) => {
 
-} catch (error) {
-    res.status(400).json(error);
-}
-   
-}
-
-exports.loginUser = async (req, res)=>{
     try {
-        const logUser = await User.findOne({email:req.body.email}).exec();
 
-        if(logUser){
-            if(logUser.password===req.body.password){
-                res.status(200).json({logUser});
-                console.log({msg:"Login Successfull"});
-            }
-            else{
-            res.status(400).json({message:"wrong User-Password"})
-            }
-        }
-        else{
-            res.status(400).json({message:"Not User-Email exists"})
-        }
+        var salt = crypto.randomBytes(16);
+        crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256', async function (err, hashedPassword) {
+
+            const user = new User({ ...req.body, password: hashedPassword, salt })
+            const savedUser = await user.save();
+
+            req.login(sanitizeUser(savedUser), (err) => { // req.login also calls serializer and adds to the session //
+                if (err) {
+                    res.status(400).json(err)
+                }
+                else {
+                    const token = jwt.sign(sanitizeUser(savedUser), SECRET_KEY)
+
+                    res.cookie('jwt', token, { expires: new Date(Date.now() + 3600000), httpOnly: true }).status(201).json( { id:savedUser.id, role:savedUser.role });
+                }
+            })
+
+        })
     } catch (error) {
-        res.status(401).json(error);
+        res.status(400).json(error);
+    }
+
+}
+
+exports.loginUser = async (req, res) => {
+    res.cookie('jwt', req.user.token, { expires: new Date(Date.now() + 3600000), httpOnly: true }).status(201).json(req.user.token);
+}
+
+
+exports.checkAuth = async (req, res) => {
+    // Now you can access the authenticated user using req.user
+    if (req.user) {
+        res.status(201).json(req.user);
+    } else {
+        res.status(400).json({ status: 'error', message: 'User not authenticated' });
     }
 }
