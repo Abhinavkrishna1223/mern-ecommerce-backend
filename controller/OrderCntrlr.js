@@ -22,7 +22,7 @@ exports.fetchOrderByUser = async (req, res) => {
     const { id } = req.user;
 
     try {
-        const ordersPlaced = await Order.find({ user: id }).populate('user') // (populate) method gives the whole object of the given refernce id //
+        const ordersPlaced = await Order.find({ user: id }).populate('user').populate('product') // (populate) method gives the whole object of the given refernce id //
         res.status(200).json(ordersPlaced);
     } catch (error) {
         res.status(400).json(error);
@@ -34,7 +34,7 @@ exports.updateOrder= async(req,res)=>{
     
   
     try {
-      const updatedOrder = await Order.findByIdAndUpdate(id, req.body, {new: true});
+      const updatedOrder = await Order.findByIdAndUpdate(id, req.body, {new: true}).populate('product');
       res.status(200).json(updatedOrder);
   
   } catch (error) {

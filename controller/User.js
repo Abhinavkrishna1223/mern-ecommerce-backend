@@ -5,7 +5,7 @@ exports.fetchUsersById = async (req, res) => {
     const { id } = req.user;
 
     try {
-        const userById = await User.findById(id).exec();
+        const userById = await User.findById(id).select('email id role addresses username').exec();
         res.status(200).json(userById);
 
     } catch (error) {
