@@ -25,6 +25,7 @@ const cartRouters = require("./routes/CartRouter");
 const orderRouters = require("./routes/OrderRoute");
 const { User } = require("./model/userSchema");
 const { isAuth, sanitizeUser, SECRET_KEY, cookieExtractor } = require("./services/common");
+const { ExtractJwt } = require("passport-jwt");
 
 
 
@@ -52,14 +53,6 @@ server.use('/auth', authRouters.router);
 server.use('/users', isAuth(), userRouters.router);
 server.use('/cart', isAuth(), cartRouters.router);
 server.use('/order', isAuth(), orderRouters.router);
-
-
-
-// jwt options //
-
-var opts = {}
-opts.jwtFromRequest = cookieExtractor;
-opts.secretOrKey = SECRET_KEY;
 
 passport.use(
   'local',
@@ -95,8 +88,15 @@ passport.use(
   })
 );
 
-// JWt Strategy //
 
+
+// jwt options //
+
+var opts = {}
+opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+opts.secretOrKey = SECRET_KEY;
+
+// JWt Strategy //
 passport.use('jwt', new JwtStrategy(opts, async function(jwt_payload, done) {
 
   try {
