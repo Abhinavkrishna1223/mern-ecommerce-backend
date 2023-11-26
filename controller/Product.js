@@ -86,3 +86,29 @@ exports.updateProductsById= async(req,res)=>{
   }
   
   }
+
+exports.searchProducts = async (req, res) => {
+
+    try {
+      const { title } = req.body; // Extracting the title from the request body
+  
+      if (!title) {
+        return res.status(400).json({req:req.body, msg:"No title passed"});
+      }
+  
+      let productSearched = await Product.find({
+        "$or": [
+          { "title": { $regex:title, $options:"i" } }
+        ]
+      });
+  
+      console.log(productSearched);
+      res.status(200).json(productSearched);
+    } catch (error) {
+      res.status(400).json({ msg: error });
+    }
+  }
+  
+
+
+

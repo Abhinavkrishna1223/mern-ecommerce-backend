@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const bodyParser = require('body-parser');
 
 
 const server = express();
@@ -13,6 +14,8 @@ const jwt = require('jsonwebtoken');
 const JwtStrategy = require('passport-jwt').Strategy;
 const cookieParser = require("cookie-parser");
 
+server.use(express.json());
+server.use(bodyParser.json());
 
 
 // Routes //
@@ -26,6 +29,7 @@ const orderRouters = require("./routes/OrderRoute");
 const { User } = require("./model/userSchema");
 const { isAuth, sanitizeUser, SECRET_KEY, cookieExtractor } = require("./services/common");
 const { ExtractJwt } = require("passport-jwt");
+const exp = require("constants");
 
 
 
