@@ -8,7 +8,6 @@ router.post('/', createProduct)
     .get('/',fetchAllProducts)
     .get('/:id', fetchProductsById)
     .patch('/:id', updateProductsById)
-    .post('/search', searchProducts)
 
 
 exports.router = router;
