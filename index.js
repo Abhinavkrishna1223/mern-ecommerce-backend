@@ -1,11 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require('body-parser');
-
+require('dotenv').config();
 
 const server = express();
 const cors = require("cors")
-const port = 8080 || process.env.PORT;
+const port = process.env.PORT;
 const passport = require("passport");
 const session = require('express-session');
 const LocalStrategy = require("passport-local").Strategy
@@ -134,15 +134,11 @@ passport.deserializeUser(function (user, cb) {
 });
 
 
-
-
-main().catch(err => console.log(err));
-
+main().catch(err => console.log(err))
 async function main() {
-  await mongoose.connect('mongodb://127.0.0.1:27017/ecommerce');
+  await mongoose.connect(process.env.DATABASE_URL);
   console.log("Database connected successfully");
 }
-
 
 server.get("/", (req, res) => {
   res.json({ status: "success" })

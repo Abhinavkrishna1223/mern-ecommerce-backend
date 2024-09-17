@@ -10,7 +10,7 @@ exports.sanitizeUser = (user) => {
   return { id: user.id, role: user.role }
 }
 
-exports.SECRET_KEY = 'SECRET_KEY'
+exports.SECRET_KEY = process.env.SECRET_KEY
 
 exports.cookieExtractor = function(req) {
   var token = null;
