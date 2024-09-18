@@ -20,7 +20,7 @@ exports.cookieExtractor = function(req) {
 
   // Saving the Specific user token for Testing purpose //
 
-  token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0ZDljYmVkMWQyOWFmZDQxMmQ5MjcyOCIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNjkyMDkwMTMzfQ.qP78JfToAj4LscasYXPMSiYkLKGsL5g_8enBDIoIrSE"
+  token = process.env.COOKIE_TOKEN;
 
   return token;
 };
